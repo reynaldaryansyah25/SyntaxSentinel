@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     gitlab_webhook_secret: str = ""
     gitlab_project_id: int | None = None
     gitlab_default_branch: str = "main"
+    demo_token: str = ""
 
     gcp_project_id: str = ""
     gcp_location: str = "us-central1"

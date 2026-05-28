@@ -1,0 +1,8 @@
+$ pytest -q
+=================================== ERRORS ====================================
+________________________ ERROR collecting test_app.py _________________________
+Traceback (most recent call last):
+  File "/builds/reynalaryansyah22/syntaxsentinel-demo/app.py", line 2
+    def add(a: int, b: int) -> int
+                                  ^
+SyntaxError: expected ':'

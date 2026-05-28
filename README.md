@@ -176,3 +176,30 @@ If `python verify_env.py` reports that the GitLab token is invalid:
 ## Google Cloud and Gemini
 
 The final product must use Google Cloud AI/Gemini for reasoning. This sprint includes `google-cloud-aiplatform` and leaves the agent service layer ready for a later Vertex AI/Gemini implementation. If Google Agent Development Kit is added later, it should be integrated behind the service layer rather than coupled directly to API endpoints.
+
+## GitLab MCP-Style Tool Layer
+
+SyntaxSentinel uses `app/services/gitlab_mcp_client.py` as a GitLab MCP-style tool layer. For the MVP, it is implemented with the GitLab REST API v4 through `httpx.AsyncClient`.
+
+The client exposes tool-like methods:
+
+- `list_pipeline_jobs`
+- `get_failed_jobs`
+- `read_job_trace`
+- `get_file_content`
+- `create_branch`
+- `commit_file_changes`
+- `create_merge_request`
+- `add_merge_request_note`
+- `get_project`
+
+This keeps GitLab operations behind a narrow interface. If an official GitLab MCP server is used later, the orchestrator can keep the same high-level workflow while replacing this implementation.
+
+Write operations respect `DRY_RUN=true`. In dry-run mode, branch creation, commits, merge requests, and merge request notes are simulated and no GitLab write request is sent.
+
+Custom exceptions are provided for common GitLab failures:
+
+- `GitLabAuthenticationError`
+- `GitLabNotFoundError`
+- `GitLabRateLimitError`
+- `GitLabAPIError`

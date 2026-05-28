@@ -13,3 +13,6 @@ paswword.txt
 secrets.*
 .docs/
 paswwords.txt
+frontend/node_modules/
+frontend/dist/
+frontend/*.log
