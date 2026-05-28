@@ -1,0 +1,1 @@
+"""SyntaxSentinel application package."""

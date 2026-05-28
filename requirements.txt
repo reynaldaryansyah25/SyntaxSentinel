@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+httpx
+google-cloud-aiplatform
+pytest
+pytest-asyncio
+respx
+python-multipart
