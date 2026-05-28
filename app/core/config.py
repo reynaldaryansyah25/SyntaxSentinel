@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     def empty_project_id_to_none(cls, value: object) -> object:
         if value == "":
             return None
+        if isinstance(value, str) and value.startswith(("PASTE_", "your_", "YOUR_")):
+            return None
         return value
 
 

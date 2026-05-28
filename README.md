@@ -47,6 +47,7 @@ tests/
 .env.example
 requirements.txt
 README.md
+verify_env.py
 ```
 
 ## Local Setup
@@ -89,6 +90,53 @@ Copy-Item .env.example .env
 
 Fill in the required values in `.env` as each sprint enables the related integration.
 
+For GitLab development, set at least:
+
+```env
+GITLAB_BASE_URL=https://gitlab.com
+GITLAB_PERSONAL_ACCESS_TOKEN=your_gitlab_personal_access_token
+GITLAB_WEBHOOK_SECRET=your_random_webhook_secret
+GITLAB_PROJECT_ID=your_gitlab_project_id
+GITLAB_DEFAULT_BRANCH=main
+DRY_RUN=true
+```
+
+For Google Cloud and Gemini, set:
+
+```env
+GCP_PROJECT_ID=your_gcp_project_id
+GCP_LOCATION=us-central1
+GEMINI_MODEL=your_vertex_ai_gemini_model
+```
+
+Do not commit `.env`. Use `.env.example` for safe documentation only.
+
+## Verify Environment
+
+Run the verification script after creating `.env`:
+
+```bash
+python verify_env.py
+```
+
+On Windows PowerShell, make sure the virtual environment is active first:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python verify_env.py
+```
+
+The script checks:
+
+- required environment variables
+- GitLab token validity through the GitLab `/api/v4/user` endpoint
+- Vertex AI configuration initialization
+- Google Application Default Credentials, when available
+
+Secrets are never printed. The script exits with a non-zero code if required credentials or configuration are missing.
+
+If Google Cloud billing or Application Default Credentials are not ready yet, GitLab checks can still pass while the final summary fails. Finish Google Cloud setup before live Gemini or Cloud Run usage.
+
 ## Run Locally
 
 Start the development server:
@@ -113,6 +161,17 @@ pytest
 The application reads environment variables through Pydantic Settings. See `.env.example` for the supported values.
 
 Secrets such as GitLab tokens and webhook secrets must stay in `.env` or a secret manager. Do not commit real secrets to the repository.
+
+## Troubleshooting GitLab Token Verification
+
+If `python verify_env.py` reports that the GitLab token is invalid:
+
+- Confirm the token was copied completely. GitLab personal access tokens often start with `glpat-`.
+- Confirm the token has the `api` scope. `read_user` is useful, but `api` is required for later repository and Merge Request actions.
+- Confirm the token is not expired or revoked in GitLab user settings.
+- Confirm `GITLAB_BASE_URL` is `https://gitlab.com` for GitLab.com projects.
+- Confirm the project ID in `GITLAB_PROJECT_ID` belongs to a project your account can access.
+- Generate a new token if the old token may have been exposed. Never paste real tokens into issues, README files, screenshots, or chat.
 
 ## Google Cloud and Gemini
 

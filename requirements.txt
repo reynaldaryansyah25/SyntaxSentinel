@@ -5,6 +5,7 @@ pydantic-settings
 python-dotenv
 httpx
 google-cloud-aiplatform
+google-auth
 pytest
 pytest-asyncio
 respx

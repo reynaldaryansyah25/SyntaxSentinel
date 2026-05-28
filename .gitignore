@@ -8,4 +8,8 @@ __pycache__/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+password*.txt
+paswword.txt
+secrets.*
 .docs/
+paswwords.txt
