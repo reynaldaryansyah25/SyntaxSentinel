@@ -144,7 +144,7 @@ SyntaxError: expected ':'
 
     assert result["status"] == "merge_request_created"
     assert result["source_file_path"] == "app.py"
-    assert fake_gitlab.branches[0]["name"] == "syntaxsentinel/fix-pipeline-456"
+    assert fake_gitlab.branches[0]["name"] == "syntaxsentinel/fix-pipeline-456-job-99"
     assert fake_gitlab.commits[0]["actions"] == [
         {
             "action": "update",
@@ -234,3 +234,45 @@ SyntaxError: expected ':'
     assert result["status"] == "safety_blocked"
     assert "not found" in result["reason"]
     assert fake_gitlab.commits == []
+
+
+def test_select_source_file_prefers_non_test_path_for_assertion_error() -> None:
+    selected = orchestrator._select_source_file(
+        ["test_app.py", "app.py"],
+        {
+            "error_type": "AssertionError",
+            "file_path": "test_app.py",
+            "line_number": 5,
+            "message": "assert 6 == 5",
+        },
+    )
+
+    assert selected == "app.py"
+
+
+def test_select_source_file_infers_source_from_test_path() -> None:
+    selected = orchestrator._select_source_file(
+        ["test_app.py"],
+        {
+            "error_type": "AssertionError",
+            "file_path": "test_app.py",
+            "line_number": 5,
+            "message": "assert 6 == 5",
+        },
+    )
+
+    assert selected == "app.py"
+
+
+def test_infer_source_path_from_tests_directory() -> None:
+    selected = orchestrator._select_source_file(
+        ["tests/test_app.py"],
+        {
+            "error_type": "AssertionError",
+            "file_path": "tests/test_app.py",
+            "line_number": 5,
+            "message": "assert False is True",
+        },
+    )
+
+    assert selected == "app.py"

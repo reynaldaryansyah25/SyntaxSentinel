@@ -3,11 +3,15 @@
 @tailwind utilities;
 
 :root {
-  color: #172033;
-  background: #eef2f7;
+  color: #f8fafc;
+  background: #0b1020;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+    "Inter", "Geist", "Plus Jakarta Sans", "Segoe UI Variable", "Segoe UI",
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-feature-settings:
+    "cv02" 1,
+    "cv03" 1,
+    "cv04" 1;
 }
 
 body {
@@ -24,6 +28,147 @@ input {
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {
-  outline: 3px solid rgba(14, 165, 233, 0.45);
+  outline: 3px solid rgba(56, 189, 248, 0.26);
   outline-offset: 2px;
+}
+
+.premium-shell {
+  background:
+    radial-gradient(circle at 16% 4%, rgba(56, 189, 248, 0.16), transparent 28rem),
+    radial-gradient(circle at 82% 18%, rgba(139, 92, 246, 0.14), transparent 32rem),
+    radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.08), transparent 34rem),
+    #0b1020;
+}
+
+.soft-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at center, black, transparent 72%);
+}
+
+.header-glow {
+  background:
+    linear-gradient(135deg, rgba(56, 189, 248, 0.26), transparent 26%),
+    linear-gradient(315deg, rgba(139, 92, 246, 0.18), transparent 28%),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.38), rgba(139, 92, 246, 0.28), rgba(16, 185, 129, 0.22));
+  filter: blur(0);
+}
+
+.agent-dot {
+  position: relative;
+  display: inline-flex;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: #10b981;
+  box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.12), 0 0 22px rgba(16, 185, 129, 0.5);
+}
+
+.agent-dot::after {
+  position: absolute;
+  inset: -0.35rem;
+  content: "";
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  border-radius: inherit;
+  animation: status-pulse 1.8s ease-out infinite;
+}
+
+.premium-button {
+  background: linear-gradient(135deg, #38bdf8, #6366f1 58%, #8b5cf6);
+  box-shadow: 0 14px 36px rgba(56, 189, 248, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.premium-button:hover {
+  box-shadow: 0 18px 44px rgba(56, 189, 248, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.logo-scan {
+  animation: logo-scan 1.6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.timeline-scan {
+  animation: timeline-scan 1.6s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(56, 189, 248, 0.12),
+    rgba(139, 92, 246, 0.1),
+    transparent
+  );
+  bottom: 0;
+  left: -50%;
+  position: absolute;
+  top: 0;
+  width: 50%;
+}
+
+.progress-stripes {
+  background-image:
+    linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.18) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.18) 50%,
+      rgba(255, 255, 255, 0.18) 75%,
+      transparent 75%,
+      transparent
+    ),
+    linear-gradient(90deg, #38bdf8, #60a5fa, #8b5cf6);
+  background-size:
+    24px 24px,
+    100% 100%;
+  animation: progress-stripes 0.9s linear infinite;
+}
+
+@keyframes status-pulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.72);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes logo-scan {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(-9px);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(9px);
+  }
+}
+
+@keyframes timeline-scan {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(320%);
+  }
+}
+
+@keyframes progress-stripes {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
+
+  to {
+    background-position:
+      24px 0,
+      0 0;
+  }
 }

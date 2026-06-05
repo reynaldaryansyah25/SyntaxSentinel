@@ -18,6 +18,11 @@ class FixPlan(BaseModel):
     risk_level: str
     should_create_merge_request: bool
 
+    @field_validator("file_to_modify")
+    @classmethod
+    def normalize_file_to_modify(cls, value: str) -> str:
+        return value.strip().replace("\\", "/")
+
     @field_validator("risk_level")
     @classmethod
     def validate_risk_level(cls, value: str) -> str:

@@ -69,7 +69,7 @@ async def run_healing_process(project_id: int, pipeline_id: int, ref: str) -> di
             validate_patch_size(source_code, fixed_content)
             action = build_gitlab_update_action(source_file_path, fixed_content)
 
-            branch_name = f"syntaxsentinel/fix-pipeline-{pipeline_id}"
+            branch_name = _build_fix_branch_name(pipeline_id, job_id)
             target_branch = ref or settings.gitlab_default_branch
             commit_message = f"Fix pipeline failure {pipeline_id}"
             mr_title = f"SyntaxSentinel fix for pipeline {pipeline_id}"
@@ -175,6 +175,20 @@ def _select_source_file(
     error_summary: dict[str, object | None],
 ) -> str | None:
     summary_path = error_summary.get("file_path")
+    error_type = error_summary.get("error_type")
+
+    if (
+        error_type == "AssertionError"
+        and isinstance(summary_path, str)
+        and _is_test_path(summary_path)
+    ):
+        non_test_path = _first_valid_non_test_path(candidate_paths)
+        if non_test_path is not None:
+            return non_test_path
+        inferred_source_path = _infer_source_path_from_test_path(summary_path)
+        if inferred_source_path is not None:
+            return inferred_source_path
+
     if isinstance(summary_path, str) and validate_file_scope(summary_path):
         return summary_path
 
@@ -182,6 +196,49 @@ def _select_source_file(
         if validate_file_scope(path):
             return path
     return None
+
+
+def _first_valid_non_test_path(candidate_paths: list[str]) -> str | None:
+    for path in candidate_paths:
+        if validate_file_scope(path) and not _is_test_path(path):
+            return path
+    return None
+
+
+def _is_test_path(file_path: str) -> bool:
+    normalized = file_path.replace("\\", "/")
+    name = normalized.rsplit("/", maxsplit=1)[-1]
+    return (
+        normalized.startswith("tests/")
+        or name.startswith("test_")
+        or name.endswith("_test.py")
+    )
+
+
+def _infer_source_path_from_test_path(file_path: str) -> str | None:
+    normalized = file_path.replace("\\", "/")
+    parts = normalized.split("/")
+    filename = parts[-1]
+
+    if filename.startswith("test_"):
+        inferred_name = filename.removeprefix("test_")
+    elif filename.endswith("_test.py"):
+        inferred_name = f"{filename.removesuffix('_test.py')}.py"
+    else:
+        return None
+
+    parent_parts = parts[:-1]
+    if parent_parts and parent_parts[-1] == "tests":
+        parent_parts = parent_parts[:-1]
+
+    inferred_path = "/".join([*parent_parts, inferred_name]) if parent_parts else inferred_name
+    if validate_file_scope(inferred_path):
+        return inferred_path
+    return None
+
+
+def _build_fix_branch_name(pipeline_id: int, job_id: int) -> str:
+    return f"syntaxsentinel/fix-pipeline-{pipeline_id}-job-{job_id}"
 
 
 def _validate_fix_plan(

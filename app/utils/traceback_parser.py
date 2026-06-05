@@ -26,12 +26,14 @@ def trim_trace(trace: str, max_chars: int) -> str:
 
 
 def extract_candidate_file_paths(trace: str) -> list[str]:
+    trace = _strip_known_log_prefixes(trace)
     candidates: list[str] = []
 
     patterns = [
         r'File "([^"]+)", line \d+',
-        r"(?m)^([A-Za-z0-9_./\\-]+\.py):\d+:",
-        r"(?m)^([A-Za-z0-9_./\\-]+(?:requirements\.txt|pyproject\.toml|package\.json))\b",
+        r"(?m)(?:^|\s)([A-Za-z0-9_./\\-]+\.py):\d+:",
+        r"(?m)(?:^|\s)FAILED\s+([A-Za-z0-9_./\\-]+\.py)::",
+        r"(?m)(?:^|\s)([A-Za-z0-9_./\\-]+(?:requirements\.txt|pyproject\.toml|package\.json))\b",
     ]
 
     for pattern in patterns:
@@ -44,6 +46,8 @@ def extract_candidate_file_paths(trace: str) -> list[str]:
 
 
 def extract_python_error_summary(trace: str) -> dict[str, object | None]:
+    trace = _strip_known_log_prefixes(trace)
+
     syntax_error = _extract_syntax_error(trace)
     if syntax_error:
         return syntax_error
@@ -126,9 +130,17 @@ def _extract_named_error(
 
 def _extract_pytest_assertion_error(trace: str) -> dict[str, object | None] | None:
     assertion_match = re.search(r"(?m)^E\s+AssertionError(?::\s*(.+))?", trace)
-    location_match = re.search(r"(?m)^([A-Za-z0-9_./\\-]+\.py):(\d+):\s+AssertionError", trace)
+    inline_assert_match = re.search(r"(?m)(?:^|\s)E\s+assert\s+(.+)$", trace)
+    location_match = re.search(
+        r"(?m)(?:^|\s)([A-Za-z0-9_./\\-]+\.py):(\d+):\s+AssertionError",
+        trace,
+    )
+    failed_summary_match = re.search(
+        r"(?m)^FAILED\s+([A-Za-z0-9_./\\-]+\.py)::[^\s]+(?:\s+-\s+AssertionError(?::\s*(.+))?)?",
+        trace,
+    )
 
-    if not assertion_match and not location_match:
+    if not assertion_match and not location_match and not failed_summary_match:
         return None
 
     file_path = None
@@ -136,12 +148,18 @@ def _extract_pytest_assertion_error(trace: str) -> dict[str, object | None] | No
     if location_match:
         file_path = _normalize_repo_path(location_match.group(1))
         line_number = int(location_match.group(2))
+    elif failed_summary_match:
+        file_path = _normalize_repo_path(failed_summary_match.group(1))
 
     return {
         "error_type": "AssertionError",
         "file_path": file_path,
         "line_number": line_number,
-        "message": assertion_match.group(1).strip() if assertion_match and assertion_match.group(1) else "pytest assertion failed",
+        "message": _extract_assertion_message(
+            assertion_match,
+            inline_assert_match,
+            failed_summary_match,
+        ),
     }
 
 
@@ -207,3 +225,28 @@ def _dedupe_keep_order(values: list[str]) -> list[str]:
             seen.add(value)
             result.append(value)
     return result
+
+
+def _extract_assertion_message(
+    assertion_match: re.Match[str] | None,
+    inline_assert_match: re.Match[str] | None,
+    failed_summary_match: re.Match[str] | None,
+) -> str:
+    if assertion_match and assertion_match.group(1):
+        return assertion_match.group(1).strip()
+    if inline_assert_match:
+        return f"assert {inline_assert_match.group(1).strip()}"
+    if failed_summary_match and failed_summary_match.group(2):
+        return failed_summary_match.group(2).strip()
+    return "pytest assertion failed"
+
+
+def _strip_known_log_prefixes(trace: str) -> str:
+    return "\n".join(
+        re.sub(
+            r"^\d{4}-\d{2}-\d{2}T\S+\s+\S+\s+",
+            "",
+            line,
+        )
+        for line in trace.splitlines()
+    )
