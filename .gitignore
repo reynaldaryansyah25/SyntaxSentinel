@@ -12,6 +12,7 @@ password*.txt
 paswword.txt
 secrets.*
 .docs/
+docs/
 paswwords.txt
 frontend/node_modules/
 frontend/dist/
